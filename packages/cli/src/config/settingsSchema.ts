@@ -625,6 +625,26 @@ const SETTINGS_SCHEMA = {
         description: 'Enable collection of usage statistics',
         showInDialog: false,
       },
+      disableRemoteExperiments: {
+        type: 'boolean',
+        label: 'Disable Remote Experiments',
+        category: 'Privacy',
+        requiresRestart: true,
+        default: false,
+        description:
+          'Disable fetching remote experiment flags from Google when using OAuth authentication. This prevents Google from remotely enabling/disabling features.',
+        showInDialog: false,
+      },
+      disableCodeAssistTelemetry: {
+        type: 'boolean',
+        label: 'Disable Code Assist Telemetry',
+        category: 'Privacy',
+        requiresRestart: true,
+        default: false,
+        description:
+          'Disable Clearcut telemetry logging when using OAuth authentication. This prevents usage data from being sent to Google even with OAuth.',
+        showInDialog: false,
+      },
     },
   },
 

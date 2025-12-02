@@ -243,6 +243,8 @@ export interface ConfigParameters {
   accessibility?: AccessibilitySettings;
   telemetry?: TelemetrySettings;
   usageStatisticsEnabled?: boolean;
+  disableRemoteExperiments?: boolean;
+  disableCodeAssistTelemetry?: boolean;
   fileFiltering?: {
     respectGitIgnore?: boolean;
     respectGeminiIgnore?: boolean;
@@ -345,6 +347,8 @@ export class Config {
   private readonly accessibility: AccessibilitySettings;
   private readonly telemetrySettings: TelemetrySettings;
   private readonly usageStatisticsEnabled: boolean;
+  private readonly disableRemoteExperiments: boolean;
+  private readonly disableCodeAssistTelemetry: boolean;
   private geminiClient!: GeminiClient;
   private baseLlmClient!: BaseLlmClient;
   private modelRouterService: ModelRouterService;
@@ -466,6 +470,9 @@ export class Config {
       useCollector: params.telemetry?.useCollector,
     };
     this.usageStatisticsEnabled = params.usageStatisticsEnabled ?? true;
+    this.disableRemoteExperiments = params.disableRemoteExperiments ?? false;
+    this.disableCodeAssistTelemetry =
+      params.disableCodeAssistTelemetry ?? false;
 
     this.fileFiltering = {
       respectGitIgnore:
@@ -687,7 +694,8 @@ export class Config {
     const previewFeatures = this.getPreviewFeatures();
 
     const codeAssistServer = getCodeAssistServer(this);
-    if (codeAssistServer) {
+    // Skip remote experiments if user has disabled them for privacy
+    if (codeAssistServer && !this.disableRemoteExperiments) {
       this.experimentsPromise = getExperiments(codeAssistServer)
         .then((experiments) => {
           this.setExperiments(experiments);
@@ -707,6 +715,9 @@ export class Config {
     } else {
       this.experiments = undefined;
       this.experimentsPromise = undefined;
+      if (this.disableRemoteExperiments) {
+        debugLogger.debug('Remote experiments disabled by user preference');
+      }
     }
 
     // Reset the session flag since we're explicitly changing auth and using default model
@@ -714,6 +725,10 @@ export class Config {
   }
 
   async getExperimentsAsync(): Promise<Experiments | undefined> {
+    // Skip if user has disabled remote experiments
+    if (this.disableRemoteExperiments) {
+      return undefined;
+    }
     if (this.experiments) {
       return this.experiments;
     }
@@ -1119,6 +1134,11 @@ export class Config {
   }
 
   getUsageStatisticsEnabled(): boolean {
+    // Also disable usage statistics if Code Assist telemetry is disabled
+    // This prevents Clearcut logging even when using OAuth
+    if (this.disableCodeAssistTelemetry) {
+      return false;
+    }
     return this.usageStatisticsEnabled;
   }
 
