@@ -85,10 +85,8 @@ function buildForPlatform(platform, bundlePath) {
 
   console.log(`\nBuilding single-file for ${platform}...`);
 
-  // Use Bun to compile
-  const bunPath = join(process.env.HOME, '.bun', 'bin', 'bun');
-
-  run(bunPath, [
+  // Use Bun to compile (bun should be in PATH from setup-bun action)
+  run('bun', [
     'build',
     bundlePath,
     '--compile',
@@ -138,13 +136,14 @@ async function main() {
   const specificPlatform = args.find((a) => !a.startsWith('--'));
 
   // Check if bun is available
-  const bunPath = join(process.env.HOME, '.bun', 'bin', 'bun');
-  if (!existsSync(bunPath)) {
+  const bunCheck = spawnSync('bun', ['--version'], { stdio: 'pipe' });
+  if (bunCheck.status !== 0) {
     console.error(
       'Bun not found. Install with: curl -fsSL https://bun.sh/install | bash',
     );
     process.exit(1);
   }
+  console.log(`Using Bun ${bunCheck.stdout.toString().trim()}`);
 
   // Clean and create dist directory
   if (existsSync(distDir)) {
