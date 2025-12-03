@@ -44,6 +44,8 @@
     "build:standalone:mac": "node scripts/build-standalone.js mac-arm64",
     "build:standalone:mac-intel": "node scripts/build-standalone.js mac-x64",
     "build:standalone:linux": "node scripts/build-standalone.js linux-x64",
+    "build:single": "node scripts/build-single-file.js",
+    "build:single:all": "node scripts/build-single-file.js --all",
     "test": "npm run test --workspaces --if-present",
     "test:ci": "npm run test:ci --workspaces --if-present && npm run test:scripts",
     "test:scripts": "vitest run --config ./scripts/tests/vitest.config.ts",

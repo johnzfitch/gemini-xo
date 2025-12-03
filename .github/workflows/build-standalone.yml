@@ -47,24 +47,29 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build bundle
         run: npm run bundle
 
-      - name: Build standalone package
+      - name: Build single-file executable
         env:
           BUILD_PLATFORM: ${{ matrix.platform }}
-        run: npm run build:standalone -- "$BUILD_PLATFORM"
+        run: npm run build:single -- "$BUILD_PLATFORM"
 
       - name: Create archive (Unix)
         if: runner.os != 'Windows'
         env:
           ARTIFACT_NAME: ${{ matrix.artifact }}
         run: |
-          cd dist-standalone
-          tar -czvf "../$ARTIFACT_NAME.tar.gz" "gsharp-"*
+          cd dist-single
+          tar -czvf "../$ARTIFACT_NAME.tar.gz" */*
 
       - name: Create archive (Windows)
         if: runner.os == 'Windows'
@@ -72,8 +77,8 @@ jobs:
           ARTIFACT_NAME: ${{ matrix.artifact }}
         shell: pwsh
         run: |
-          cd dist-standalone
-          Compress-Archive -Path "gsharp-*" -DestinationPath "..\$env:ARTIFACT_NAME.zip"
+          cd dist-single
+          Compress-Archive -Path "*\*" -DestinationPath "..\$env:ARTIFACT_NAME.zip"
 
       - name: Upload artifact (Unix)
         if: runner.os != 'Windows'
@@ -104,7 +109,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REF_NAME: ${{ github.ref_name }}
         with:
           name: Gemini Sharp ${{ github.ref_name }}
           draft: false
